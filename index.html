@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>¿Qué tengo?</title>
-    <link rel="manifest" href="manifest-quetengo.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f5f0e8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -475,7 +475,7 @@
         render();
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw-quetengo.js');
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
