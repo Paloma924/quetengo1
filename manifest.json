@@ -2,7 +2,7 @@
   "name": "¿Qué tengo? — Chino",
   "short_name": "Qué tengo",
   "description": "Flashcards de vocabulario chino sobre objetos",
-  "start_url": "./quetengo.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f0e8",
   "theme_color": "#f5f0e8",
