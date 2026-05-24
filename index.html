@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Qué tengo?</title>
+    <link rel="manifest" href="manifest-quetengo.json">
+    <meta name="theme-color" content="#f5f0e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Qué tengo">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f5f0e8;
+            --card-bg: #fffdf7;
+            --ink: #1a1410;
+            --muted: #7a6f63;
+            --accent: #c84b2f;
+            --accent2: #3a6b4a;
+            --border: #d9d0c0;
+            --shadow: rgba(80,50,20,0.12);
+        }
+
+        body {
+            background: var(--bg);
+            font-family: sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(200,75,47,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(58,107,74,0.06) 0%, transparent 50%);
+        }
+
+        h1 {
+            font-family: sans-serif;
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            font-weight: 300;
+            color: var(--ink);
+            letter-spacing: 0.02em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        #counter {
+            font-size: 0.78rem;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* Card — más grande */
+        #cardContainer {
+            width: min(420px, 92vw);
+            height: 280px;
+            perspective: 1200px;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        #card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #card.flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            box-shadow: 0 4px 20px var(--shadow), 0 1px 4px var(--shadow);
+        }
+
+        /* ANVERSO */
+        .card-front .word-es {
+            font-family: sans-serif;
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            font-weight: 300;
+            color: var(--ink);
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        /* REVERSO */
+        .card-back {
+            transform: rotateY(180deg);
+            gap: 12px;
+            background: linear-gradient(145deg, #fffdf7 0%, #fff8ee 100%);
+        }
+
+        .card-back .word-pinyin {
+            font-family: sans-serif;
+            font-style: italic;
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            font-weight: 300;
+            color: var(--accent);
+            letter-spacing: 0.04em;
+            text-align: center;
+        }
+
+        .card-back .divider {
+            width: 40px;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .card-back .word-hanzi {
+            font-family: sans-serif;
+            font-size: clamp(2.8rem, 11vw, 4.2rem);
+            font-weight: 300;
+            color: var(--ink);
+            text-align: center;
+            line-height: 1;
+        }
+
+        /* Navegación */
+        .nav-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            font-size: 1rem;
+            color: var(--ink);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(200,75,47,0.06);
+        }
+
+        .nav-hint {
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        /* Botones de acción */
+        .action-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            font-family: sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--ink);
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 1px 4px var(--shadow);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+            box-shadow: none;
+        }
+
+        #listenBtn:hover  { border-color: var(--accent2); color: var(--accent2); }
+        #micBtn:hover     { border-color: var(--accent);  color: var(--accent);  }
+        #shuffleBtn:hover { border-color: #5b4fcf; color: #5b4fcf; }
+
+        #micBtn.listening {
+            border-color: var(--accent);
+            background: rgba(200,75,47,0.08);
+            color: var(--accent);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(200,75,47,0.35); }
+            50%       { box-shadow: 0 0 0 7px rgba(200,75,47,0); }
+        }
+
+        /* Resultado mic */
+        #micResult {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            max-width: min(420px, 92vw);
+            transition: all 0.2s;
+        }
+
+        #micResult.listening  { background: #eef3ff; color: #3a4a9f; border: 1.5px solid #7289da; }
+        #micResult.perfect    { background: #d4edda; color: #1a6b2f; border: 1.5px solid #28a745; }
+        #micResult.good       { background: #fff3cd; color: #7d5a00; border: 1.5px solid #f0a500; }
+        #micResult.incorrect  { background: #fdecea; color: #8b1a1a; border: 1.5px solid #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <h1>¿Qué tengo?</h1>
+    <p class="subtitle">Vocabulario · Chino</p>
+    <div id="counter"></div>
+
+    <div id="cardContainer">
+        <div id="card">
+            <div class="card-face card-front">
+                <div class="word-es" id="displayMeaning"></div>
+            </div>
+            <div class="card-face card-back">
+                <div class="word-pinyin" id="displayPinyin"></div>
+                <div class="divider"></div>
+                <div class="word-hanzi" id="displayHanzi"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-row">
+        <button class="nav-btn" id="prevBtn">←</button>
+        <span class="nav-hint">Anterior / Siguiente</span>
+        <button class="nav-btn" id="nextBtn">→</button>
+    </div>
+
+    <div class="action-row">
+        <button class="action-btn" id="listenBtn">🔊 Escuchar</button>
+        <button class="action-btn" id="micBtn">🎙️ Hablar</button>
+        <button class="action-btn" id="shuffleBtn">🔀 Barajar</button>
+    </div>
+
+    <div id="micResult"></div>
+
+    <script>
+        var vocabulary = [
+            { h: "车子", p: "Chē zi",     m: "Coche" },
+            { h: "房子", p: "Fáng zi",    m: "Casa, propiedad" },
+            { h: "工作", p: "Gōng zuò",   m: "Trabajo" },
+            { h: "钱",   p: "Qián",       m: "Dinero" },
+            { h: "衣服", p: "Yī fú",      m: "Ropa" },
+            { h: "笔",   p: "Bǐ",         m: "Utensilio de escritura" },
+            { h: "书",   p: "Shū",        m: "Libro" },
+            { h: "电话", p: "Diàn huà",   m: "Teléfono" },
+            { h: "电脑", p: "Diàn nǎo",   m: "Ordenador" },
+            { h: "电视", p: "Diàn shì",   m: "Televisión" },
+            { h: "手机", p: "Shǒu jī",    m: "Teléfono móvil" },
+            { h: "手表", p: "Shǒu biǎo",  m: "Reloj" },
+            { h: "桌子", p: "Zhuō zi",    m: "Mesa" },
+            { h: "椅子", p: "Yǐ zi",      m: "Silla" },
+            { h: "包包", p: "Bāo bāo",    m: "Bolso" },
+            { h: "东西", p: "Dōng xi",    m: "Cosas, objetos" },
+            { h: "相机", p: "Xiàng jī",   m: "Cámara de fotos" },
+            { h: "时间", p: "Shí jiān",   m: "Tiempo" },
+            { h: "问题", p: "Wèn tí",     m: "Problema, duda" },
+            { h: "白板", p: "Bái bǎn",    m: "Pizarra" },
+            { h: "盒子", p: "Hé zi",      m: "Caja" }
+        ];
+
+        var index = 0;
+        var card = document.getElementById('card');
+        var micBtn = document.getElementById('micBtn');
+        var micResult = document.getElementById('micResult');
+        var isListening = false;
+        var recReady = true; // control de agilidad
+
+        var Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var rec = Speech ? new Speech() : null;
+        if (rec) {
+            rec.lang = 'zh-CN';
+            rec.interimResults = false;
+            rec.maxAlternatives = 5;
+            rec.continuous = false;
+        }
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(s) { s.getTracks().forEach(function(t) { t.stop(); }); })
+                .catch(function() {});
+        }
+
+        function render() {
+            card.classList.remove('flipped');
+            var item = vocabulary[index];
+            document.getElementById('displayHanzi').innerText = item.h;
+            document.getElementById('displayPinyin').innerText = item.p;
+            document.getElementById('displayMeaning').innerText = item.m;
+            document.getElementById('counter').innerText = "Tarjeta " + (index + 1) + " de " + vocabulary.length;
+            hideMicResult();
+        }
+
+        function showMicResult(type, msg) {
+            micResult.className = type;
+            micResult.innerText = msg;
+            micResult.style.display = 'block';
+        }
+
+        function hideMicResult() {
+            micResult.style.display = 'none';
+            micResult.className = '';
+        }
+
+        function setListening(on) {
+            isListening = on;
+            if (on) {
+                micBtn.textContent = '🔴 Escuchando...';
+                micBtn.classList.add('listening');
+                showMicResult('listening', '🎙️ Di la palabra en chino...');
+            } else {
+                micBtn.textContent = '🎙️ Hablar';
+                micBtn.classList.remove('listening');
+                recReady = true;
+            }
+        }
+
+        function normalize(str) {
+            // Quita espacios para comparar hanzi
+            return str.replace(/\s/g, '');
+        }
+
+        function shuffleArray(arr) {
+            for (var i = arr.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+            }
+        }
+
+        document.getElementById('cardContainer').addEventListener('click', function() {
+            card.classList.toggle('flipped');
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            index = (index < vocabulary.length - 1) ? index + 1 : 0;
+            render();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            index = (index > 0) ? index - 1 : vocabulary.length - 1;
+            render();
+        });
+
+        document.getElementById('shuffleBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            shuffleArray(vocabulary);
+            index = 0;
+            render();
+            showMicResult('listening', '🔀 ¡Cartas barajadas!');
+            setTimeout(hideMicResult, 1500);
+        });
+
+        document.getElementById('listenBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            window.speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(vocabulary[index].h);
+            u.lang = 'zh-CN';
+            window.speechSynthesis.speak(u);
+        });
+
+        micBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+
+            if (!rec) {
+                showMicResult('incorrect', '❌ Tu navegador no soporta reconocimiento de voz. Usa Chrome.');
+                return;
+            }
+            if (isListening) {
+                rec.stop();
+                return;
+            }
+            if (!recReady) return; // evita doble arranque
+            recReady = false;
+            setListening(true);
+
+            try { rec.start(); }
+            catch(err) {
+                setListening(false);
+                showMicResult('incorrect', '❌ Error al iniciar el micrófono. Inténtalo de nuevo.');
+            }
+
+            rec.onresult = function(event) {
+                setListening(false);
+                var expected = normalize(vocabulary[index].h);
+                var bestMatch = null;
+                var bestConfidence = 0;
+
+                for (var i = 0; i < event.results[0].length; i++) {
+                    var alt = event.results[0][i];
+                    var transcript = normalize(alt.transcript.trim());
+                    if (transcript === expected && alt.confidence > bestConfidence) {
+                        bestMatch = alt;
+                        bestConfidence = alt.confidence;
+                    }
+                }
+
+                var topTranscript = event.results[0][0].transcript.trim();
+
+                if (bestMatch) {
+                    if (bestConfidence >= 0.85) {
+                        // PERFECTO
+                        showMicResult('perfect', '🌟 ¡Perfecto! (' + Math.round(bestConfidence * 100) + '%)');
+                        card.classList.add('flipped');
+                    } else if (bestConfidence >= 0.5) {
+                        // BIEN
+                        showMicResult('good', '👍 ¡Bien! Pronunciación aceptable (' + Math.round(bestConfidence * 100) + '%) — sigue practicando');
+                        card.classList.add('flipped');
+                    } else {
+                        // Coincide pero confianza muy baja → incorrecto
+                        showMicResult('incorrect', '❌ Se entendió: "' + topTranscript + '"  |  Esperado: ' + vocabulary[index].h);
+                    }
+                } else {
+                    // INCORRECTO
+                    showMicResult('incorrect', '❌ Se entendió: "' + topTranscript + '"  |  Esperado: ' + vocabulary[index].h);
+                }
+            };
+
+            rec.onerror = function(event) {
+                setListening(false);
+                if (event.error === 'no-speech') {
+                    showMicResult('incorrect', '🔇 No se detectó voz. Inténtalo de nuevo.');
+                } else if (event.error === 'not-allowed') {
+                    showMicResult('incorrect', '🚫 Permiso de micrófono denegado.');
+                } else {
+                    showMicResult('incorrect', '❌ Error al escuchar. Inténtalo de nuevo.');
+                }
+            };
+
+            rec.onend = function() {
+                if (isListening) setListening(false);
+            };
+        });
+
+        render();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw-quetengo.js');
+        }
+    </script>
+</body>
+</html>
